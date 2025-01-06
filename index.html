@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STARBIZBOOSTER</title>
+    <title>Suivi financière</title>
     <style>
         /* Styles généraux */
         body {
@@ -262,43 +262,11 @@ header {
     font-style: italic;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-        body {
-    overflow-x: hidden;
-        }
-
-        body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-header {
-    flex-shrink: 0;  /* Empêche l'entête de se réduire */
-}
-
-main {
-    flex-grow: 1;    /* Fait que le contenu principal occupe l'espace restant */
-}
 
 
-
-        
-#myChart {
-    width: 100%;
-    height: 400px; /* ou la taille que vous préférez */
-}
-        
     </style>
     <!-- Inclure Chart.js via CDN -->
-    
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
 
     
 </head>
@@ -378,23 +346,6 @@ main {
     <button class="btn" id="reset-history">Réinitialiser l'historique</button>
 </section> -->
 
-    
-
-<script>
-    var ctx = document.getElementById('myChart').getContext('2d');
-    var chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Red', 'Blue', 'Yellow', 'Green'],
-            datasets: [{
-                label: 'Colors',
-                data: [12, 19, 3, 5],
-                backgroundColor: ['red', 'blue', 'yellow', 'green']
-            }]
-        }
-    });
-    </script>
-    
 
 </main>
 
@@ -713,4 +664,230 @@ function generateChart() {
                         }
                     }
                 }
-     
+            }
+        }
+    });
+}
+
+// Appeler la fonction generateChart pour afficher le graphique au chargement de la page
+window.addEventListener('load', generateChart);
+
+    </script>
+        
+    <script>
+        document.getElementById('add-income').addEventListener('click', () => {
+    let amount = parseFloat(document.getElementById('income-amount').value);
+    let description = document.getElementById('income-description').value;
+    if (amount > 0 && description) {
+        totalIncome += amount;
+        balance = totalIncome - totalExpense;
+        let date = new Date().toLocaleDateString();
+        history.unshift({ type: 'Revenu', amount, description, date });
+        updateUI();
+        generateChart();  // Mettre à jour le graphique
+        clearForm('income');
+    }
+});
+
+    </script>
+    <script>
+        document.getElementById('add-expense').addEventListener('click', () => {
+    let amount = parseFloat(document.getElementById('expense-amount').value);
+    let description = document.getElementById('expense-description').value;
+    if (amount > 0 && description) {
+        totalExpense += amount;
+        balance = totalIncome - totalExpense;
+        let date = new Date().toLocaleDateString();
+        history.unshift({ type: 'Dépense', amount, description, date });
+        updateUI();
+        generateChart();  // Mettre à jour le graphique
+        clearForm('expense');
+    }
+});
+
+    </script>
+
+    <script>
+        // Créer ou mettre à jour le graphique
+function generateChart() {
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    // Organiser les données pour le graphique
+    const labels = [];
+    const incomeData = [];
+    const expenseData = [];
+
+    // Parcourir l'historique filtré
+    filteredHistory.forEach(item => {
+        const itemDate = new Date(item.date).toLocaleDateString();
+        if (!labels.includes(itemDate)) {
+            labels.push(itemDate);
+            incomeData.push(0);
+            expenseData.push(0);
+        }
+        const index = labels.indexOf(itemDate);
+        if (item.type === 'Revenu') {
+            incomeData[index] += item.amount;
+        } else if (item.type === 'Dépense') {
+            expenseData[index] += item.amount;
+        }
+    });
+
+    // Si le graphique existe déjà, le détruire avant de le redessiner
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    // Créer un nouveau graphique avec les données filtrées
+    const data = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Revenus',
+                data: incomeData,
+                borderColor: 'green',
+                backgroundColor: 'rgba(0,255,0,0.2)', // Couleur de la courbe des revenus
+                fill: true,
+                tension: 0.4,  // Rendre la courbe plus douce
+                borderWidth: 2
+            },
+            {
+                label: 'Dépenses',
+                data: expenseData,
+                borderColor: 'red',
+                backgroundColor: 'rgba(255,0,0,0.2)', // Couleur de la courbe des dépenses
+                fill: true,
+                tension: 0.4,  // Rendre la courbe plus douce
+                borderWidth: 2
+            }
+        ]
+    };
+
+    // Créer un nouveau graphique ou mettre à jour l'existant
+    myChart = new Chart(ctx, {
+        type: 'bar', // Type de graphique (courbe)
+        data: data,
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Montant (FCFA)'
+                    },
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Graphique des Finances'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw} FCFA`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+    </script>
+    
+    <script>
+
+
+
+
+function generateChart() {
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    // Si un graphique existe déjà, détruisez-le avant d'en créer un nouveau
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: history.map((item, index) => `Entrée ${index + 1}`), // Par exemple, pour chaque entrée
+            datasets: [
+                {
+                    label: 'Revenus (FCFA)',
+                    data: history
+                        .filter(item => item.type === 'Revenu')
+                        .map(item => item.amount),
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                },
+                {
+                    label: 'Dépenses (FCFA)',
+                    data: history
+                        .filter(item => item.type === 'Dépense')
+                        .map(item => item.amount),
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                },
+            },
+        },
+    });
+}
+
+// Appeler `generateChart` à chaque mise à jour des données
+updateUI = function () {
+    document.getElementById('total-income').innerText = `${totalIncome} FCFA`;
+    document.getElementById('total-expense').innerText = `${totalExpense} FCFA`;
+    document.getElementById('solde').innerText = `${balance} FCFA`;
+
+    let historyHTML = '';
+    history.forEach(item => {
+        historyHTML += `
+            <div>
+                <strong>${item.type}</strong> - ${item.amount} FCFA<br>
+                Motif: ${item.description} <br>
+                Date: ${item.date} à ${item.time}
+            </div>
+            <hr>
+        `;
+    });
+    document.getElementById('history').innerHTML = historyHTML;
+
+    saveToLocalStorage();
+    generateChart(); // Générer ou mettre à jour le graphique
+};
+
+
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<footer>
+    <p>
+        © 2025 By 
+        <a href="https://wa.me/22990086267" target="_blank" style="color: white; text-decoration: none; font-weight: bold;">
+            Josias Akodjenou.
+        </a> Tous droits réservés.
+    </p>
+</footer>
+
+
+</body>
+</html>
