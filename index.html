@@ -548,6 +548,9 @@ document.getElementById('download-pdf').addEventListener('click', () => {
     doc.save("Historique_Financier.pdf");
 });
 
+// Variable pour stocker le solde du jour précédent
+let previousDayBalance = 0;
+
 // Planifier la réinitialisation automatique à 23H59
 function scheduleDailyReset() {
     const now = new Date();
@@ -562,19 +565,32 @@ function scheduleDailyReset() {
         const today = new Date().toLocaleDateString();
         const time = "23:59:59";
 
+        // Sauvegarder le solde actuel comme solde du jour précédent
+        previousDayBalance = balance;
+
         // Ajouter les totaux de la journée dans l'historique
         history.unshift({ type: 'Résumé', amount: totalIncome, description: 'Total des entrées', date: today, time });
         history.unshift({ type: 'Résumé', amount: totalExpense, description: 'Total des sorties', date: today, time });
         history.unshift({ type: 'Résumé', amount: balance, description: 'Solde final', date: today, time });
 
-        // Réinitialiser les totaux sans toucher au solde
+        // Réinitialiser les totaux (revenus et dépenses)
         totalIncome = 0;
         totalExpense = 0;
 
+        // Initialiser le solde avec le solde du jour précédent
+        balance = previousDayBalance;
+
+        // Mettre à jour l'interface utilisateur
         updateUI();
-        scheduleDailyReset(); // Planifier la prochaine réinitialisation
+
+        // Planifier la prochaine réinitialisation
+        scheduleDailyReset();
     }, millisTillMidnight);
 }
+
+// Appeler la fonction pour démarrer la réinitialisation quotidienne
+scheduleDailyReset();
+        
 
     </script>
     
