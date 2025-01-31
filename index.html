@@ -287,9 +287,11 @@ header {
 #monthly-form button {
     background: #283e6d;
     color: white;
-    padding: 10px;
+    margin: 2px;
     border: none;
     cursor: pointer;
+    padding: 10px 30px;
+    border-radius: 0%;
 }
 
 #monthly-history {
@@ -977,8 +979,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const currentDate = new Date();
-        const monthYear = currentDate.toLocaleString("fr-FR", { month: "long", year: "numeric" });
+        const lastMonth = new Date();
+lastMonth.setMonth(lastMonth.getMonth() - 1); // Décrémente d'un mois
+const monthYear = lastMonth.toLocaleString("fr-FR", { month: "long", year: "numeric" });
 
         // Récupérer les anciennes données et ajouter la nouvelle entrée
         const history = JSON.parse(localStorage.getItem("monthlyData")) || [];
