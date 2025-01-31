@@ -262,7 +262,46 @@ header {
     font-style: italic;
 }
 
+#monthly-summary {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
 
+#monthly-form {
+    display: flex;
+    flex-direction: column;
+}
+
+#monthly-form label {
+    margin-top: 10px;
+}
+
+#monthly-form input {
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+#monthly-form button {
+    background: #283e6d;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+#monthly-history {
+    list-style: none;
+    padding: 0;
+}
+
+#monthly-history li {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
+        
 
     </style>
     <!-- Inclure Chart.js via CDN -->
@@ -336,7 +375,25 @@ header {
             </div>
         </div>
     </section>
+<section id="monthly-summary">
+    <h2>Résumé Mensuel</h2>
+    <form id="monthly-form">
+        <label>Revenu Mensuel :</label>
+        <input type="number" id="monthly-income" required>
 
+        <label>Dépenses Mensuelles :</label>
+        <input type="number" id="monthly-expense" required>
+
+        <label>Bénéfice du Mois :</label>
+        <input type="number" id="monthly-profit" required>
+
+        <button type="submit">Enregistrer</button>
+    </form>
+
+    <h3>Historique Mensuel</h3>
+    <ul id="monthly-history"></ul>
+</section>
+    
     <section>
         <button class="btn" id="download-pdf">Télécharger l'historique en PDF</button>
     </section>
@@ -892,7 +949,81 @@ updateUI = function () {
     generateChart(); // Générer ou mettre à jour le graphique
 };
 
+document.addEventListener("DOMContentLoaded", function () {
+    const monthlyForm = document.getElementById("monthly-form");
+    const monthlyHistory = document.getElementById("monthly-history");
 
+    // Charger l'historique des données mensuelles
+    function loadMonthlyHistory() {
+        const history = JSON.parse(localStorage.getItem("monthlyData")) || [];
+        monthlyHistory.innerHTML = "";
+        history.forEach(entry => {
+            const li = document.createElement("li");
+            li.textContent = `${entry.month} - Revenu: ${entry.income} F, Dépenses: ${entry.expense} F, Bénéfice: ${entry.profit} F`;
+            monthlyHistory.appendChild(li);
+        });
+    }
+
+    // Enregistrement manuel des données mensuelles
+    monthlyForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const income = parseFloat(document.getElementById("monthly-income").value);
+        const expense = parseFloat(document.getElementById("monthly-expense").value);
+        const profit = parseFloat(document.getElementById("monthly-profit").value);
+
+        if (isNaN(income) || isNaN(expense) || isNaN(profit)) {
+            alert("Veuillez remplir tous les champs.");
+            return;
+        }
+
+        const currentDate = new Date();
+        const monthYear = currentDate.toLocaleString("fr-FR", { month: "long", year: "numeric" });
+
+        // Récupérer les anciennes données et ajouter la nouvelle entrée
+        const history = JSON.parse(localStorage.getItem("monthlyData")) || [];
+        history.unshift({ month: monthYear, income, expense, profit });
+        localStorage.setItem("monthlyData", JSON.stringify(history));
+
+        // Recharger l'affichage
+        loadMonthlyHistory();
+
+        // Réinitialiser le formulaire
+        monthlyForm.reset();
+    });
+
+    // Fonction pour capturer automatiquement les données mensuelles à la fin du mois
+    function captureMonthlyData() {
+        const now = new Date();
+        if (now.getDate() !== 1) return; // Exécuter seulement le 1er jour du mois
+
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
+        const monthYear = lastMonth.toLocaleString("fr-FR", { month: "long", year: "numeric" });
+
+        const income = totalIncome; // Récupérer les revenus du mois
+        const expense = totalExpense; // Récupérer les dépenses du mois
+        const profit = balance; // Le solde actuel devient le bénéfice
+
+        if (income === 0 && expense === 0) return; // Ne pas enregistrer de données vides
+
+        // Sauvegarde en localStorage
+        const history = JSON.parse(localStorage.getItem("monthlyData")) || [];
+        history.unshift({ month: monthYear, income, expense, profit });
+        localStorage.setItem("monthlyData", JSON.stringify(history));
+
+        // Réinitialiser les valeurs pour le nouveau mois
+        totalIncome = 0;
+        totalExpense = 0;
+        updateUI();
+    }
+
+    // Exécuter la capture automatique chaque jour (se déclenchera uniquement le 1er jour du mois)
+    setInterval(captureMonthlyData, 24 * 60 * 60 * 1000); // Vérification chaque 24h
+
+    // Charger l'historique au démarrage
+    loadMonthlyHistory();
+});
+        
 
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
